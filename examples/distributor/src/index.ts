@@ -14,15 +14,15 @@ import {
 const API_ENDPOINT = "http://localhost:14265";
 
 // Amount to distribute (Should be equal to amount faucet sends to every address)
-const AMOUNT = 1;
+const AMOUNT = 1000;
 
 // Number of addresses to which the distribution should be made
-const DISTRIBUTION_SPACE = 5;
+const DISTRIBUTION_SPACE = 15;
 
 const MAX_ADDRESS_LOOKUP_SPACE = DISTRIBUTION_SPACE * 5;
 
 // Seed to spend funds from
-const SEED = '256a818b2aac458941f7274985a410e57fb750f3a3a67969ece5bd9ae7eef5b2';
+const SEED = 'ENTER SEED HERE!';
 
 type AddressWithKeyPairs = {
     address: string;
@@ -208,18 +208,38 @@ async function distribute(): Promise<DistributionResult> {
     }
 }
 
-distribute()
-    .then((result: DistributionResult) => {
-        console.info('-'.repeat(75));
-        console.info('Funds distributed successfully!');
+function run() {
+    const _distribute = (): Promise<any> => {
+        return distribute()
+            .then((result: DistributionResult) => {
+                console.info('-'.repeat(75));
+                console.info('Funds distributed successfully!');
 
-        console.info('Message ID: ', result.messageId);
-        console.info('Sender address: ', result.inputAddresses[0])
-        console.info('Receiver addresses:')
+                console.info('Message ID: ', result.messageId);
+                console.info('Sender address: ', result.inputAddresses[0])
+                console.info('Receiver addresses:')
 
-        result.outputAddresses.forEach((address, idx) => {
-            console.info(`${idx + 1}: ${address}`)
-        })
+                result.outputAddresses.forEach((address, idx) => {
+                    console.info(`${idx + 1}: ${address}`)
+                })
 
-        console.info('-'.repeat(75));
-    }).catch(console.error);
+                console.info('-'.repeat(75));
+
+                return new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error(`Paused!`)), 10000)
+                });
+            }).catch((error) => {
+                console.info('-'.repeat(75));
+                console.error(error.message);
+                console.info('-'.repeat(75));
+
+                return _distribute();
+            });
+    };
+
+    return _distribute();
+}
+
+new Promise((resolve) => {
+    setTimeout(resolve, 1000)
+}).then(run);
