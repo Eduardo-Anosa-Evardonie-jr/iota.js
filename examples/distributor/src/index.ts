@@ -65,7 +65,7 @@ function getAddressesWithKeyPairs(start: number): AddressWithKeyPairs[] {
     const addresses = []
 
     for (let i = start; i < DISTRIBUTION_SPACE + start; i++) {
-        const walletPath = new Bip32Path(`m/0'/0'/${i}'`);
+        const walletPath = new Bip32Path(`m/44'/4218'/0'/0'/${i}'`);
         const walletAddressSeed = walletSeed.generateSeedFromPath(walletPath);
         const walletEd25519Address = new Ed25519Address();
 
@@ -111,7 +111,7 @@ async function prepareInputAndOutputs(start = 0, addresses: AddressWithKeyPairs[
 
     addresses = [...addresses, ...getAddressesWithKeyPairs(start)];
     addresses = await assignBalances(addresses)
-    
+
     if (
         addresses.every((addressObject: AddressWithKeyPairs) => addressObject.balance === 0)
     ) {
