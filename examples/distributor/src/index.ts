@@ -24,6 +24,8 @@ const MAX_ADDRESS_LOOKUP_SPACE = DISTRIBUTION_SPACE * 5;
 // Seed to spend funds from
 const SEED = 'ENTER SEED HERE!';
 
+const DELAY_TIME = 120000;
+
 type AddressWithKeyPairs = {
     address: string;
     keyIndex: number;
@@ -210,7 +212,9 @@ async function distribute(): Promise<DistributionResult> {
 
 function run() {
     const _distribute = (): Promise<any> => {
-        return distribute()
+        return new Promise((resolve) => {
+            setTimeout(resolve, DELAY_TIME)
+        }).then(() => distribute())
             .then((result: DistributionResult) => {
                 console.info('-'.repeat(75));
                 console.info('Funds distributed successfully!');
@@ -226,7 +230,7 @@ function run() {
                 console.info('-'.repeat(75));
 
                 return new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error(`Paused!`)), 10000)
+                    setTimeout(() => reject(new Error(`Paused!`)), DELAY_TIME)
                 });
             }).catch((error) => {
                 console.info('-'.repeat(75));
