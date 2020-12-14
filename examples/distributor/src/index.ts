@@ -8,7 +8,9 @@ import {
     IKeyPair,
     IUTXOInput,
     sendAdvanced,
-    SingleNodeClient
+    SingleNodeClient,
+    promote,
+    reattach
 } from "@iota/iota.js";
 
 const API_ENDPOINT = "http://localhost:14265";
@@ -210,6 +212,66 @@ async function distribute(): Promise<DistributionResult> {
     }
 }
 
+/**
+ * Promotes and reattaches a message
+ * 
+ * @method promoteAndReattach
+ * 
+ * @param {string} messageId 
+ */
+function promoteAndReattach(messageId: string) {
+    const _checkMeta = (id: string): Promise<any> => {
+        return client.messageMetadata(id)
+            .then((metadata) => {
+                if (metadata.ledgerInclusionState) {
+                    return Promise.resolve(metadata);
+                }
+
+                if (metadata.shouldPromote) {
+                    return _promote(id)
+                }
+
+                if (metadata.shouldReattach) {
+                    return _reattach(id);
+                }
+
+                return new Promise((resolve) => {
+                    setTimeout(resolve, 1000);
+                }).then(() => {
+                    return _checkMeta(id);
+                })
+            })
+    };
+
+    const _promote = (id: string): Promise<any> => {
+        return promote(
+            client,
+            id
+        ).then(() => {
+            console.info(`Successfully promoted message with id ${id}`);
+            return _checkMeta(id);
+        })
+    };
+
+
+    const _reattach = (id: string): Promise<any> => {
+        return reattach(
+            client,
+            id
+        ).then((message) => {
+            console.info(`Successfully reattached message id ${id}`);
+            console.info(`Reattached id ${message.messageId}`)
+
+            return _checkMeta(message.messageId);
+        })
+    };
+
+    return _checkMeta(messageId).catch((error) => {
+        return _checkMeta(messageId);
+    });
+}
+
+
 function run() {
     const _distribute = (): Promise<any> => {
         return new Promise((resolve) => {
@@ -229,9 +291,13 @@ function run() {
 
                 console.info('-'.repeat(75));
 
-                return new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error(`Paused!`)), DELAY_TIME)
-                });
+                return promoteAndReattach(result.messageId).then((metadata) => {
+                    console.log(`Included in ledger state: ${metadata.ledgerInclusionState}`);
+
+                    return new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error(`Paused!`)), DELAY_TIME)
+                    });
+                })
             }).catch((error) => {
                 console.info('-'.repeat(75));
                 console.error(error.message);
